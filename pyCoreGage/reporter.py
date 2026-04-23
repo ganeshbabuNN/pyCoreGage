@@ -97,7 +97,7 @@ _SAVED_COL_MAP = {
 
 _SAVED_NEEDED = [
     "id", "subj_id", "vis_id", "desrp", "find_dt",
-    "status", "analyst_note", "analyst_id",
+    "status", "analyst_note", "analyst_id", "review_note", "reviewer_id",
 ]
 
 
@@ -133,14 +133,21 @@ def _import_saved(reports_dir: str, fname: str) -> Optional[pd.DataFrame]:
     if df.empty:
         return None
 
-    df["vis_id"]  = pd.to_numeric(df["vis_id"], errors="coerce")
-    df["find_dt"] = _parse_date_col(df["find_dt"])
-    df["desrp"]       = df["desrp"].astype(str).apply(cleanup_text)
-    df["analyst_note"] = df["analyst_note"].astype(str).apply(cleanup_text)
-    df["dup_id"]  = df["desrp"].astype(str).apply(lambda x: re.sub(r"\s", "", x))
+    df["vis_id"]       = pd.to_numeric(df["vis_id"], errors="coerce")
+    df["find_dt"]      = _parse_date_col(df["find_dt"])
+    df["desrp"]        = df["desrp"].astype(str).apply(cleanup_text)
+    df["analyst_note"] = df["analyst_note"].fillna("").astype(str).apply(cleanup_text)
+    df["analyst_id"]   = df["analyst_id"].fillna("").astype(str).str.strip()
+    df["review_note"]  = df["review_note"].fillna("").astype(str).apply(cleanup_text)
+    df["reviewer_id"]  = df["reviewer_id"].fillna("").astype(str).str.strip()
+    df["dup_id"]       = df["desrp"].apply(lambda x: re.sub(r"\s", "", x))
 
-    out = df[["id", "subj_id", "vis_id", "desrp", "dup_id",
-              "find_dt", "status", "analyst_note", "analyst_id"]].copy()
+    out = df[[
+        "id", "subj_id", "vis_id", "desrp", "dup_id",
+        "find_dt", "status",
+        "analyst_note", "analyst_id",
+        "review_note",  "reviewer_id",
+    ]].copy()
     logger.info("    -> %d saved issue(s) loaded from %s", len(out), fname)
     return out
 
@@ -438,11 +445,17 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
 
     def _empty_old() -> pd.DataFrame:
         return pd.DataFrame({
-            "id": pd.Series(dtype=str), "subj_id": pd.Series(dtype=str),
-            "vis_id": pd.Series(dtype=float), "desrp": pd.Series(dtype=str),
-            "dup_id": pd.Series(dtype=str), "find_dt": pd.Series(dtype=object),
-            "status": pd.Series(dtype=str), "analyst_note": pd.Series(dtype=str),
-            "analyst_id": pd.Series(dtype=str),
+            "id":           pd.Series(dtype=str),
+            "subj_id":      pd.Series(dtype=str),
+            "vis_id":       pd.Series(dtype=float),
+            "desrp":        pd.Series(dtype=str),
+            "dup_id":       pd.Series(dtype=str),
+            "find_dt":      pd.Series(dtype=object),
+            "status":       pd.Series(dtype=str),
+            "analyst_note": pd.Series(dtype=str),
+            "analyst_id":   pd.Series(dtype=str),
+            "review_note":  pd.Series(dtype=str),
+            "reviewer_id":  pd.Series(dtype=str),
         })
 
     parts = [df for df in [old_open, old_closed] if df is not None]
@@ -498,6 +511,8 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
             merged["status"]       = pd.NA
             merged["analyst_note"] = pd.NA
             merged["analyst_id"]   = pd.NA
+            merged["review_note"]  = pd.NA
+            merged["reviewer_id"]  = pd.NA
         else:
             merged = olddata.copy()
             merged["_new"] = False
@@ -567,47 +582,85 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
             issuelist = issuelist.drop(columns=["dup_id"])
 
         # ── Merge feedback from each role ─────────────────────────────────
+        # FIX 1 : Use only 3 reliable CDISC keys — drop dup_id which caused
+        #          zero-match merges when description text differed by even one
+        #          character between new findings and the saved Excel text.
+        # FIX 2 : Never drop essential fb columns (fb_status, fb_analyst_note,
+        #          fb_analyst_id, review_note, reviewer_id) from fb_right — only
+        #          drop truly colliding non-essential columns such as desrp.
+        # FIX 3 : Handle "queried" status from reviewer in addition to "closed".
+        # FIX 4 : Pull fb_status normalisation into one reusable Series so both
+        #          "closed" and "queried" comparisons use identical stripping.
+        _ESSENTIAL_FB_COLS = {
+            "fb_status", "fb_analyst_note", "fb_analyst_id",
+            "review_note", "reviewer_id",
+        }
+        _FB_MERGE_KEYS = ["id", "subj_id", "vis_id"]   # FIX 1
+
         for role in ["DM", "MW", "SDTM", "ADAM"]:
             fb = _read_feedback(cfg.feedback, role)
             if fb is None or fb.empty:
                 continue
 
-            fb_keys = ["id", "subj_id", "vis_id", "dup_id"]
-            issuelist["dup_id"] = issuelist["desrp"].astype(str).apply(
-                lambda x: re.sub(r"\s", "", x)
-            )
-            issuelist = _add_vis_sentinel(issuelist)
-            fb = _add_vis_sentinel(fb)
+            # Drop dup_id column from fb if present (no longer a key)
+            fb = fb.drop(columns=["dup_id"], errors="ignore")
 
-            # Drop any fb column whose suffixed name already exists on the left side.
-            # pandas raises MergeError when suffixes would produce a column that
-            # already exists (e.g. "desrp.fb" when issuelist already has "desrp.fb").
-            fb_extra = [c for c in fb.columns if c not in fb_keys]
-            left_cols = set(issuelist.columns)
-            safe_fb_extra = [
-                c for c in fb_extra
-                if not (c in left_cols and (c + ".fb") in left_cols)
-            ]
-            fb_right = fb[fb_keys + safe_fb_extra].copy()
+            issuelist = _add_vis_sentinel(issuelist)
+            fb        = _add_vis_sentinel(fb)
+
+            # Build fb_right: merge keys + essential fb columns only.
+            # For any non-essential column that already exists on issuelist AND
+            # whose ".fb"-suffixed name would also collide, drop it from fb_right
+            # to prevent pandas MergeError. Essential columns are always kept.
+            fb_extra   = [c for c in fb.columns if c not in _FB_MERGE_KEYS]
+            left_cols  = set(issuelist.columns)
+            safe_extra = []
+            for c in fb_extra:
+                if c in _ESSENTIAL_FB_COLS:
+                    safe_extra.append(c)          # always keep essential cols
+                elif c in left_cols and (c + ".fb") in left_cols:
+                    pass                          # would produce duplicate — drop
+                else:
+                    safe_extra.append(c)
+
+            fb_right = fb[_FB_MERGE_KEYS + safe_extra].copy()
 
             merged_fb = pd.merge(
                 issuelist, fb_right,
-                on=fb_keys, how="left", suffixes=("", ".fb"),
+                on=_FB_MERGE_KEYS, how="left", suffixes=("", ".fb"),
             )
 
-            # Apply reviewer status
+            # FIX 3 + FIX 4 : apply status from reviewer with full normalisation
             if "fb_status" in merged_fb.columns:
-                reviewer_closed = (
-                    merged_fb["fb_status"].astype(str).str.lower().str.strip() == "closed"
+                fb_status_norm = (
+                    merged_fb["fb_status"]
+                    .astype(str).str.lower().str.strip()
                 )
-                already_rc = merged_fb["analyst_note"].str.contains(
+
+                # ── closed ──────────────────────────────────────────────────
+                reviewer_closed = fb_status_norm == "closed"
+                already_rc = merged_fb["analyst_note"].astype(str).str.contains(
                     "[closed by reviewer]", regex=False, na=False
                 )
                 merged_fb.loc[reviewer_closed, "status"] = "closed"
                 merged_fb.loc[reviewer_closed & ~already_rc, "analyst_note"] = (
                     "[closed by reviewer] "
                     + merged_fb.loc[reviewer_closed & ~already_rc, "analyst_note"]
+                    .astype(str)
                 ).str.strip()
+
+                # ── queried (FIX 3) ─────────────────────────────────────────
+                reviewer_queried = fb_status_norm == "queried"
+                already_rq = merged_fb["analyst_note"].astype(str).str.contains(
+                    "[queried by reviewer]", regex=False, na=False
+                )
+                merged_fb.loc[reviewer_queried, "status"] = "queried"
+                merged_fb.loc[reviewer_queried & ~already_rq, "analyst_note"] = (
+                    "[queried by reviewer] "
+                    + merged_fb.loc[reviewer_queried & ~already_rq, "analyst_note"]
+                    .astype(str)
+                ).str.strip()
+
                 merged_fb = merged_fb.drop(columns=["fb_status"])
 
             # Merge review_note
@@ -631,7 +684,7 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
                 merged_fb["analyst_note"] = merged_fb["fb_analyst_note"].where(
                     merged_fb["fb_analyst_note"].notna()
                     & (merged_fb["fb_analyst_note"].astype(str).str.strip() != ""),
-                    other=merged_fb["analyst_note"],
+                    other=merged_fb["analyst_note"].astype(str),
                 )
                 merged_fb = merged_fb.drop(columns=["fb_analyst_note"])
 
@@ -644,8 +697,8 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
                 merged_fb = merged_fb.drop(columns=["fb_analyst_id"])
 
             issuelist = _drop_vis_sentinel(merged_fb)
-            if "dup_id" in issuelist.columns:
-                issuelist = issuelist.drop(columns=["dup_id"])
+            # Clean up any leftover dup_id that slipped through
+            issuelist = issuelist.drop(columns=["dup_id"], errors="ignore")
 
         # Drop helper columns
         for col in ["_new", "_old"]:
@@ -667,10 +720,16 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
                 issuelist[col] = pd.NA
 
     # ── Summary statistics ────────────────────────────────────────────────────
-    status_col = issuelist["status"].astype(str).str.lower().str.strip() if not issuelist.empty else pd.Series(dtype=str)
-    n_open_tot   = (status_col != "closed").sum() if not issuelist.empty else 0
-    n_closed_tot = (status_col == "closed").sum() if not issuelist.empty else 0
-    n_queried    = (status_col == "queried").sum() if not issuelist.empty else 0
+    if not issuelist.empty:
+        status_col   = issuelist["status"].astype(str).str.lower().str.strip()
+        n_closed_tot = (status_col == "closed").sum()
+        n_queried    = (status_col == "queried").sum()
+        n_open_tot   = (~status_col.isin({"closed", "queried"})).sum()
+    else:
+        status_col   = pd.Series(dtype=str)
+        n_open_tot   = 0
+        n_closed_tot = 0
+        n_queried    = 0
     n_analyst = 0
     n_reviewer = 0
     if not issuelist.empty and "analyst_note" in issuelist.columns:
@@ -697,8 +756,8 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
         counts = df.groupby("id").size().reset_index(name=col_name)
         return counts
 
-    open_iss   = issuelist[status_col != "closed"] if not issuelist.empty else issuelist
-    closed_iss = issuelist[status_col == "closed"] if not issuelist.empty else issuelist
+    open_iss   = issuelist[~status_col.isin({"closed"})] if not issuelist.empty else issuelist
+    closed_iss = issuelist[status_col == "closed"]        if not issuelist.empty else issuelist
 
     n_open_by   = _count_by(open_iss,   "n_open")
     n_closed_by = _count_by(closed_iss, "n_closed")

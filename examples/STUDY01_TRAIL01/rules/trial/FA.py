@@ -23,7 +23,8 @@ def check_FA(state, cfg):
     ]:
         if r.get(chk_id):
             res = fa[fa[col].isna() | (fa[col].astype(str).str.strip() == "")].copy()
-            res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
+            res["subj_id"] = res["USUBJID"]; 
+            res["vis_id"] = float("nan")
             res["description"] = (
                 label + " is missing for test: " +
                 res["FATESTCD"].fillna("[FATESTCD missing]")
