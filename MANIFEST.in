@@ -1,0 +1,11 @@
+include README.md
+include PUBLISH.md
+include CHANGELOG.md
+include LICENSE
+include pyproject.toml
+recursive-include pyCoreGage/data *.xlsx
+recursive-include pyCoreGage/templates *.py
+recursive-include examples *.py *.csv *.xlsx
+prune dist
+prune build
+prune *.egg-info

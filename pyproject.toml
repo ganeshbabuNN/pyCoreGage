@@ -1,0 +1,75 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyCoreGage"
+version = "0.1.0"
+description = "Data Quality Check Framework for Clinical and Analytical Data"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+authors = [
+    { name = "Ganesh Babu G", email = "ganeshbabu346@gmail.com" }
+]
+keywords = [
+    "clinical-data", "data-quality", "CDISC", "SDTM", "ADaM",
+    "data-management", "validation", "pharma",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Healthcare Industry",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+    "Topic :: Office/Business :: Financial :: Spreadsheet",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "pandas>=1.5.0",
+    "openpyxl>=3.1.0",
+]
+
+[project.optional-dependencies]
+sas = ["pyreadstat>=1.2.0"]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "pyreadstat>=1.2.0",
+]
+
+[project.urls]
+Homepage      = "https://github.com/ganeshbabunn/pyCoreGage"
+Repository    = "https://github.com/ganeshbabunn/pyCoreGage"
+"Bug Tracker" = "https://github.com/ganeshbabunn/pyCoreGage/issues"
+Documentation = "https://github.com/ganeshbabunn/pyCoreGage#readme"
+
+[project.scripts]
+pycoregage = "pyCoreGage._cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pyCoreGage*"]
+
+[tool.setuptools.package-data]
+pyCoreGage = [
+    "data/*.xlsx",
+    "templates/*.py",
+]
+
+[tool.pytest.ini_options]
+testpaths    = ["tests"]
+addopts      = "-v --tb=short"
+log_cli      = true
+log_cli_level = "WARNING"
+
+[tool.coverage.run]
+source = ["pyCoreGage"]
+omit   = ["tests/*", "examples/*"]
+
+[tool.coverage.report]
+show_missing = true
