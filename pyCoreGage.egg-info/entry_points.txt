@@ -1,0 +1,2 @@
+[console_scripts]
+pycoregage = pyCoreGage._cli:main

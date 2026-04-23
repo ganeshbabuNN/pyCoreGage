@@ -27,7 +27,7 @@ from .counter import count_valid
 from .reporter import build_reports
 from .project import create_project
 
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __author__  = "Ganesh Babu G"
 __email__   = "ganeshbabu346@gmail.com"
 __license__ = "GPL-3.0"
