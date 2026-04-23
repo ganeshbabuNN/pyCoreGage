@@ -579,8 +579,19 @@ def build_reports(cfg: CoreGageConfig, state: CoreGageState) -> None:
             issuelist = _add_vis_sentinel(issuelist)
             fb = _add_vis_sentinel(fb)
 
+            # Drop any fb column whose suffixed name already exists on the left side.
+            # pandas raises MergeError when suffixes would produce a column that
+            # already exists (e.g. "desrp.fb" when issuelist already has "desrp.fb").
+            fb_extra = [c for c in fb.columns if c not in fb_keys]
+            left_cols = set(issuelist.columns)
+            safe_fb_extra = [
+                c for c in fb_extra
+                if not (c in left_cols and (c + ".fb") in left_cols)
+            ]
+            fb_right = fb[fb_keys + safe_fb_extra].copy()
+
             merged_fb = pd.merge(
-                issuelist, fb[fb_keys + [c for c in fb.columns if c not in fb_keys]],
+                issuelist, fb_right,
                 on=fb_keys, how="left", suffixes=("", ".fb"),
             )
 

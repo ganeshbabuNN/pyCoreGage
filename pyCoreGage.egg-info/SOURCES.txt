@@ -25,12 +25,6 @@ examples/STUDY01_TRAIL01/outputs/feedback/ADAM/jyothi_ADAM.xlsx
 examples/STUDY01_TRAIL01/outputs/feedback/DM/sarang.xlsx
 examples/STUDY01_TRAIL01/outputs/feedback/MW/MW_issues.xlsx
 examples/STUDY01_TRAIL01/outputs/feedback/SDTM/ganesh.xlsx
-examples/STUDY01_TRAIL01/outputs/reports/ADAM_issues.xlsx
-examples/STUDY01_TRAIL01/outputs/reports/DM_issues.xlsx
-examples/STUDY01_TRAIL01/outputs/reports/MW_issues.xlsx
-examples/STUDY01_TRAIL01/outputs/reports/SDTM_issues.xlsx
-examples/STUDY01_TRAIL01/outputs/reports/all_closed.xlsx
-examples/STUDY01_TRAIL01/outputs/reports/all_open.xlsx
 examples/STUDY01_TRAIL01/rules/config/project_config.py
 examples/STUDY01_TRAIL01/rules/config/rule_registry.xlsx
 examples/STUDY01_TRAIL01/rules/study/AE_study.py
