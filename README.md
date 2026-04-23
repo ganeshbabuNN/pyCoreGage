@@ -1,6 +1,6 @@
 # pyCoreGage
 
-![version](https://img.shields.io/badge/version-0.1.0-blue)
+![version](https://img.shields.io/badge/version-1.0.0-blue)
 ![python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![license](https://img.shields.io/badge/license-GPL--3.0-green)
 ![tests](https://img.shields.io/badge/tests-75%20passed-brightgreen)
