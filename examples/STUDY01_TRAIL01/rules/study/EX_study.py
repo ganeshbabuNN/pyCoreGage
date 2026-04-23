@@ -17,6 +17,7 @@ def check_EX_study(state, cfg):
         return state
     r = state.active_rules
 
+    #EXPRJ001 : Invalid dose form — not in allowed list (TABLET/CAPSULE)
     if r.get("EXPRJ001"):
         if "EXDOSFRM" not in ex.columns:
             print("  NOTE: EXDOSFRM column not found - skipping EXPRJ001.")
@@ -32,6 +33,7 @@ def check_EX_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="EXPRJ001")
 
+    #EXPRJ002 : Administered dose exceeds protocol maximum (40 mg)
     if r.get("EXPRJ002"):
         sub = ex[ex["EXDOSE"].notna() & (ex["EXDOSE"].astype(str).str.strip() != "")].copy()
         sub["dose_num"] = pd.to_numeric(sub["EXDOSE"], errors="coerce")
@@ -45,6 +47,7 @@ def check_EX_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="EXPRJ002")
 
+    #EXPRJ003 : Missing administration status (EXSTAT)
     if r.get("EXPRJ003"):
         if "EXSTAT" not in ex.columns:
             print("  NOTE: EXSTAT column not found - skipping EXPRJ003.")

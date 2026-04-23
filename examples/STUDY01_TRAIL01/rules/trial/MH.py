@@ -14,12 +14,14 @@ def check_MH(state, cfg):
         return state
     r = state.active_rules
 
+    #MHCHK001 : Missing medical history term (MHTERM)
     if r.get("MHCHK001"):
         res = mh[mh["MHTERM"].isna() | (mh["MHTERM"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
         res["description"] = "Medical history term (MHTERM) is missing in the medical history record"
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="MHCHK001")
 
+    #MHCHK002 : Medical history end date before start date
     if r.get("MHCHK002"):
         sub = mh.dropna(subset=["MHSTDTC","MHENDTC"]).copy()
         sub = sub[(sub["MHSTDTC"].str.strip() != "") & (sub["MHENDTC"].str.strip() != "")]
@@ -34,6 +36,7 @@ def check_MH(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="MHCHK002")
 
+    #MHCHK003 : Missing onset date (MHSTDTC)
     if r.get("MHCHK003"):
         res = mh[mh["MHSTDTC"].isna() | (mh["MHSTDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")

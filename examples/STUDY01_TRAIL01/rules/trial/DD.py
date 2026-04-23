@@ -12,7 +12,7 @@ def check_DD(state, cfg):
         print("  WARNING [DD]: domains['dd'] is empty - skipping.")
         return state
     r = state.active_rules
-
+    
     for chk_id, col, msg in [
         ("DDCHK001", "DDDTHDTC", "Date of death (DDDTHDTC) is missing in the death details record"),
         ("DDCHK002", "DDTERM",   "Cause of death term (DDTERM) is missing in the death details record"),

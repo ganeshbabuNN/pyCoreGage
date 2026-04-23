@@ -13,6 +13,7 @@ def check_FA_study(state, cfg):
         return state
     r = state.active_rules
 
+    #FAPRJ001 : Missing parent domain reference object (FAOBJ)
     if r.get("FAPRJ001"):
         if "FAOBJ" not in fa.columns:
             print("  NOTE: FAOBJ column not found - skipping FAPRJ001.")
@@ -25,12 +26,14 @@ def check_FA_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="FAPRJ001")
 
+    #FAPRJ002 : Missing test code (FATESTCD)
     if r.get("FAPRJ002"):
         res = fa[fa["FATESTCD"].isna() | (fa["FATESTCD"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
         res["description"] = "Finding test code (FATESTCD) is missing in the findings about record"
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="FAPRJ002")
 
+    #FAPRJ003 : Missing finding status (FASTAT)
     if r.get("FAPRJ003"):
         if "FASTAT" not in fa.columns:
             print("  NOTE: FASTAT column not found - skipping FAPRJ003.")

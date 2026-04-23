@@ -14,12 +14,14 @@ def check_PP(state, cfg):
         return state
     r = state.active_rules
 
+    #PPCHK001 : Missing PK parameter result (PPORRES)
     if r.get("PPCHK001"):
         res = pp[pp["PPORRES"].isna() | (pp["PPORRES"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
         res["description"] = "PK parameter result (PPORRES) is missing for: " + res["PPTESTCD"]
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PPCHK001")
-
+    
+    #PPCHK002 : Negative PK parameter value
     if r.get("PPCHK002"):
         sub = pp[pp["PPORRES"].notna() & (pp["PPORRES"].astype(str).str.strip() != "")].copy()
         sub["val"] = pd.to_numeric(sub["PPORRES"], errors="coerce")
@@ -31,6 +33,7 @@ def check_PP(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PPCHK002")
 
+    #PPCHK003 : Missing analysis date (PPDTC)
     if r.get("PPCHK003"):
         res = pp[pp["PPDTC"].isna() | (pp["PPDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")

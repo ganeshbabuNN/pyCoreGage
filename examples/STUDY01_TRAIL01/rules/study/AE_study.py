@@ -13,6 +13,7 @@ def check_AE_study(state, cfg):
         return state
     r = state.active_rules
 
+    #AEPRJ001 : Serious AE (AESER=Y) with missing action taken (AEACN)
     if r.get("AEPRJ001"):
         res = ae[
             ae["AESER"].notna() & (ae["AESER"].astype(str).str.upper().str.strip() == "Y") &
@@ -26,6 +27,7 @@ def check_AE_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="AEPRJ001")
 
+    #AEPRJ002 : Dictionary coded term (AEDECOD) missing
     if r.get("AEPRJ002"):
         res = ae[ae["AEDECOD"].isna() | (ae["AEDECOD"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
@@ -36,6 +38,7 @@ def check_AE_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="AEPRJ002")
 
+    #AEPRJ003 : AE study day (AESTDY) missing
     if r.get("AEPRJ003"):
         res = ae[ae["AESTDY"].isna() | (ae["AESTDY"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")

@@ -16,6 +16,7 @@ def check_VS_study(state, cfg):
         return state
     r = state.active_rules
 
+    #VSPRJ001 : Missing vital sign collection date (VSDTC)
     if r.get("VSPRJ001"):
         res = vs[vs["VSDTC"].isna() | (vs["VSDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -26,6 +27,7 @@ def check_VS_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="VSPRJ001")
 
+    #VSPRJ002 : Duplicate vital sign records same subject/visit/test
     if r.get("VSPRJ002"):
         counts = vs.groupby(["USUBJID","VISITNUM","VSTESTCD"]).size().reset_index(name="_n")
         dups   = counts[counts["_n"] > 1][["USUBJID","VISITNUM","VSTESTCD"]]
@@ -40,6 +42,7 @@ def check_VS_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="VSPRJ002")
 
+    #VSPRJ003 : Invalid position (VSPOS) value
     if r.get("VSPRJ003"):
         if "VSPOS" not in vs.columns:
             print("  NOTE: VSPOS column not found - skipping VSPRJ003.")

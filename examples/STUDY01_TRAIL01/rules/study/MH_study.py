@@ -15,6 +15,7 @@ def check_MH_study(state, cfg):
         return state
     r = state.active_rules
 
+    #MHPRJ001 : Missing dictionary coded term (MHDECOD)
     if r.get("MHPRJ001"):
         if "MHDECOD" not in mh.columns:
             print("  NOTE: MHDECOD column not found - skipping MHPRJ001.")
@@ -27,6 +28,7 @@ def check_MH_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="MHPRJ001")
 
+    #MHPRJ002 : Invalid medical history status (MHSTAT)
     if r.get("MHPRJ002"):
         if "MHSTAT" not in mh.columns:
             print("  NOTE: MHSTAT column not found - skipping MHPRJ002.")
@@ -41,6 +43,7 @@ def check_MH_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="MHPRJ002")
 
+    #MHPRJ003 : Missing body system (MHBODSYS)
     if r.get("MHPRJ003"):
         if "MHBODSYS" not in mh.columns:
             print("  NOTE: MHBODSYS column not found - skipping MHPRJ003.")

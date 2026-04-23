@@ -13,6 +13,7 @@ def check_CM_study(state, cfg):
         return state
     r = state.active_rules
 
+    #CMPRJ001 : Missing route of administration (CMROUTE)
     if r.get("CMPRJ001"):
         res = cm[cm["CMROUTE"].isna() | (cm["CMROUTE"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
@@ -22,6 +23,7 @@ def check_CM_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="CMPRJ001")
 
+    #CMPRJ002 : Missing dictionary coded term (CMDECOD)
     if r.get("CMPRJ002"):
         sub = cm[cm["CMTRT"].notna() & (cm["CMTRT"].astype(str).str.strip() != "")].copy()
         res = sub[sub["CMDECOD"].isna() | (sub["CMDECOD"].astype(str).str.strip() == "")].copy()
@@ -31,6 +33,7 @@ def check_CM_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="CMPRJ002")
 
+    #CMPRJ003 : Ongoing medication missing end flag (CMENRTPT)
     if r.get("CMPRJ003"):
         if "CMENRTPT" not in cm.columns:
             print("  NOTE: CMENRTPT column not found - skipping CMPRJ003.")

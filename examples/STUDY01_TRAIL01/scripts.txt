@@ -1,0 +1,83 @@
+Diagnose — run this first cell in your notebook
+import sys, subprocess
+
+# Which Python is this kernel using?
+print("Kernel Python:", sys.executable)
+
+# Is pyCoreGage visible to this Python?
+result = subprocess.run(
+    [sys.executable, "-m", "pip", "show", "pyCoreGage"],
+    capture_output=True, text=True
+)
+print(result.stdout if result.stdout else "NOT installed in this kernel")
+print(result.stderr if result.stderr else "")
+If you see WARNING: Package(s) not found → the package is not installed in the kernel's environment. Follow Fix A below.
+Fix A — Install into the exact kernel Python (recommended)
+Run this inside the notebook — it guarantees the install targets the same Python the kernel uses.
+import sys, subprocess
+subprocess.check_call([
+    sys.executable, "-m", "pip", "install",
+    r"C:\path\to\pyCoreGage_v0.1.0.tar.gz"   # ← your actual path
+])
+
+# Then restart the kernel (Kernel → Restart) and re-run your import
+After the cell finishes, go to Kernel → Restart Kernel before importing.
+Fix B — Install from source folder into kernel Python
+import sys, subprocess
+subprocess.check_call([
+    sys.executable, "-m", "pip", "install", "-e",
+    r"C:\Kriyababa\GitHub\pyCoreGage"   # ← folder containing pyproject.toml
+])
+Fix C — Add the source folder to sys.path (no install needed)
+Use this if you just want to run quickly without installing.
+import sys, os
+sys.path.insert(0, r"C:\Kriyababa\GitHub\pyCoreGage")
+
+# Verify it is now findable
+import pyCoreGage
+print(pyCoreGage.__version__)   # → 0.1.0
+
+from pyCoreGage import setup_coregage, load_inputs, run_checks, build_reports
+Full notebook workflow — copy and paste
+## Cell 1 — ensure package is available
+import sys, os
+sys.path.insert(0, r"C:\Kriyababa\GitHub\pyCoreGage")  # adjust path
+
+## Cell 2 — imports
+from pyCoreGage import (
+    CoreGageConfig,
+    setup_coregage,
+    load_inputs,
+    run_checks,
+    build_reports,
+)
+
+## Cell 3 — config
+import os
+PROJECT_ROOT = r"C:\Kriyababa\GitHub\pyCoreGage\examples\STUDY01_TRAIL01"
+
+cfg = CoreGageConfig(
+    project_name  = "STUDY01_TRAIL01",
+    rule_registry = os.path.join(PROJECT_ROOT, "rules", "config", "rule_registry.xlsx"),
+    trial_checks  = os.path.join(PROJECT_ROOT, "rules", "trial"),
+    study_checks  = os.path.join(PROJECT_ROOT, "rules", "study"),
+    inputs        = os.path.join(PROJECT_ROOT, "inputs"),
+    reports       = os.path.join(PROJECT_ROOT, "outputs", "reports"),
+    feedback      = os.path.join(PROJECT_ROOT, "outputs", "feedback"),
+)
+
+## Cell 4 — run
+import logging
+logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+state         = setup_coregage(cfg)
+state.domains = load_inputs(cfg)
+state         = run_checks(cfg, state)
+build_reports(cfg, state)
+
+print(f"Done — {len(state.issues)} findings → {cfg.reports}")
+Virtual environment tip (prevents this problem permanently)
+1 python -m venv .venv — create a venv in the project folder
+2 pip install pyCoreGage_v0.1.0.tar.gz ipykernel jupyter — install everything into the venv
+3 python -m ipykernel install --user --name pyCoreGage — register the venv as a Jupyter kernel
+4 In Jupyter: Kernel → Change Kernel → pyCoreGage — from now on, imports just work, no sys.path tricks needed

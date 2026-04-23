@@ -13,6 +13,7 @@ def check_DS(state, cfg):
         return state
     r = state.active_rules
 
+    #DSCHK001 : Missing disposition date (DSSTDTC)
     if r.get("DSCHK001"):
         res = ds[ds["DSSTDTC"].isna() | (ds["DSSTDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
@@ -22,12 +23,14 @@ def check_DS(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DSCHK001")
 
+    #DSCHK002 : Missing disposition decision (DSDECOD)
     if r.get("DSCHK002"):
         res = ds[ds["DSDECOD"].isna() | (ds["DSDECOD"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
         res["description"] = "Disposition decision (DSDECOD) is missing in the disposition record"
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DSCHK002")
 
+    #DSCHK003 : Missing disposition term (DSTERM)
     if r.get("DSCHK003"):
         res = ds[ds["DSTERM"].isna() | (ds["DSTERM"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")

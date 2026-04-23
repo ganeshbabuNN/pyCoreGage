@@ -13,6 +13,7 @@ def check_DD_study(state, cfg):
         return state
     r = state.active_rules
 
+    #DDPRJ001 : Missing coded cause of death (DDDECOD)
     if r.get("DDPRJ001"):
         sub = dd[dd["DDTERM"].notna() & (dd["DDTERM"].astype(str).str.strip() != "")].copy()
         res = sub[sub["DDDECOD"].isna() | (sub["DDDECOD"].astype(str).str.strip() == "")].copy()
@@ -22,6 +23,7 @@ def check_DD_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DDPRJ001")
 
+    #DDPRJ002 : Unconfirmed death status (DDSTAT != CONFIRMED)
     if r.get("DDPRJ002"):
         if "DDSTAT" not in dd.columns:
             print("  NOTE: DDSTAT column not found - skipping DDPRJ002.")
@@ -38,6 +40,7 @@ def check_DD_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DDPRJ002")
 
+    #DDPRJ003 : Missing site ID (SITEID)
     if r.get("DDPRJ003"):
         if "SITEID" not in dd.columns:
             print("  NOTE: SITEID column not found - skipping DDPRJ003.")

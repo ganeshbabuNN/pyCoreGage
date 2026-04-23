@@ -14,6 +14,7 @@ def check_PC(state, cfg):
         return state
     r = state.active_rules
 
+    #PCCHK001 : Missing concentration result (PCORRES)
     if r.get("PCCHK001"):
         res = pc[pc["PCORRES"].isna() | (pc["PCORRES"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -24,6 +25,7 @@ def check_PC(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PCCHK001")
 
+    #PCCHK002 : Negative concentration value
     if r.get("PCCHK002"):
         sub = pc[pc["PCORRES"].notna() & (pc["PCORRES"].astype(str).str.strip() != "")].copy()
         sub["val"] = pd.to_numeric(sub["PCORRES"], errors="coerce")
@@ -36,6 +38,7 @@ def check_PC(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PCCHK002")
 
+    #PCCHK003 : Missing sample collection date (PCDTC)
     if r.get("PCCHK003"):
         res = pc[pc["PCDTC"].isna() | (pc["PCDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]

@@ -13,6 +13,7 @@ def check_DV(state, cfg):
         return state
     r = state.active_rules
 
+    #DVCHK001 : Missing deviation date (DVSTDTC)
     if r.get("DVCHK001"):
         res = dv[dv["DVSTDTC"].isna() | (dv["DVSTDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
@@ -22,12 +23,14 @@ def check_DV(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DVCHK001")
 
+    #DVCHK002 : Missing deviation term (DVTERM)
     if r.get("DVCHK002"):
         res = dv[dv["DVTERM"].isna() | (dv["DVTERM"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
         res["description"] = "Protocol deviation term (DVTERM) is missing in the deviation record"
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DVCHK002")
 
+    #DVCHK003 : Missing deviation category (DVCAT)
     if r.get("DVCHK003"):
         res = dv[dv["DVCAT"].isna() | (dv["DVCAT"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")

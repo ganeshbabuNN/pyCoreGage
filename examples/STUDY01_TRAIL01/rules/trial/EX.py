@@ -14,6 +14,7 @@ def check_EX(state, cfg):
         return state
     r = state.active_rules
 
+    #EXCHK001 : Exposure end date before start date
     if r.get("EXCHK001"):
         sub = ex.dropna(subset=["EXSTDTC","EXENDTC"]).copy()
         sub = sub[(sub["EXSTDTC"].str.strip() != "") & (sub["EXENDTC"].str.strip() != "")]
@@ -29,6 +30,7 @@ def check_EX(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="EXCHK001")
 
+    #EXCHK002 : Missing dose amount (EXDOSE)
     if r.get("EXCHK002"):
         res = ex[ex["EXDOSE"].isna() | (ex["EXDOSE"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -39,6 +41,7 @@ def check_EX(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="EXCHK002")
 
+    #EXCHK003 : Missing route of administration (EXROUTE)
     if r.get("EXCHK003"):
         res = ex[ex["EXROUTE"].isna() | (ex["EXROUTE"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]

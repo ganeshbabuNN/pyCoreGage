@@ -16,6 +16,7 @@ def check_EC_study(state, cfg):
         return state
     r = state.active_rules
 
+    #ECPRJ001 : ECOCCUR occurrence flag missing
     if r.get("ECPRJ001"):
         if "ECOCCUR" not in ec.columns:
             print("  NOTE: ECOCCUR column not found - skipping ECPRJ001.")
@@ -29,6 +30,7 @@ def check_EC_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="ECPRJ001")
 
+    #ECPRJ002 : Dose exceeds protocol maximum (40 mg)
     if r.get("ECPRJ002"):
         sub = ec[ec["ECDOSE"].notna() & (ec["ECDOSE"].astype(str).str.strip() != "")].copy()
         sub["dose_num"] = pd.to_numeric(sub["ECDOSE"], errors="coerce")
@@ -42,6 +44,7 @@ def check_EC_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="ECPRJ002")
 
+    #ECPRJ003 : Reason not provided when ECOCCUR = N
     if r.get("ECPRJ003"):
         if not all(c in ec.columns for c in ["ECOCCUR","ECREASND"]):
             print("  NOTE: ECOCCUR or ECREASND column not found - skipping ECPRJ003.")

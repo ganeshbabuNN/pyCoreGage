@@ -14,6 +14,7 @@ def check_LB(state, cfg):
         return state
     r = state.active_rules
 
+    #LBCHK001 : Lab value outside normal reference range
     if r.get("LBCHK001"):
         sub = lb[
             lb["LBORRES"].notna() & (lb["LBORRES"].astype(str).str.strip() != "") &
@@ -35,6 +36,7 @@ def check_LB(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="LBCHK001")
 
+    #LBCHK002 : Missing lab result value (LBORRES)
     if r.get("LBCHK002"):
         res = lb[lb["LBORRES"].isna() | (lb["LBORRES"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -45,6 +47,7 @@ def check_LB(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="LBCHK002")
 
+    #LBCHK003 : Duplicate records for same subject/visit/test
     if r.get("LBCHK003"):
         counts = lb.groupby(["USUBJID","VISITNUM","LBTESTCD"]).size().reset_index(name="_n")
         dups   = counts[counts["_n"] > 1][["USUBJID","VISITNUM","LBTESTCD"]]

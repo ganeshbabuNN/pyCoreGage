@@ -13,6 +13,7 @@ def check_PP_study(state, cfg):
         return state
     r = state.active_rules
 
+    #PPPRJ001 : Missing standardised units (PPSTRESU)
     if r.get("PPPRJ001"):
         if "PPSTRESU" not in pp.columns:
             print("  NOTE: PPSTRESU column not found - skipping PPPRJ001.")
@@ -24,6 +25,7 @@ def check_PP_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PPPRJ001")
 
+    #PPPRJ002 : Missing specimen type (PPSPEC)
     if r.get("PPPRJ002"):
         if "PPSPEC" not in pp.columns:
             print("  NOTE: PPSPEC column not found - skipping PPPRJ002.")
@@ -35,6 +37,7 @@ def check_PP_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PPPRJ002")
 
+    #PPPRJ003 : Invalid parameter category (PPCAT not DERIVED)
     if r.get("PPPRJ003"):
         if "PPCAT" not in pp.columns:
             print("  NOTE: PPCAT column not found - skipping PPPRJ003.")

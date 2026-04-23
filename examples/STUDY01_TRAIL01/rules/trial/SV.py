@@ -14,6 +14,7 @@ def check_SV(state, cfg):
         return state
     r = state.active_rules
 
+    #SVCHK001 : Missing visit start date (SVSTDTC)
     if r.get("SVCHK001"):
         res = sv[sv["SVSTDTC"].isna() | (sv["SVSTDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -24,6 +25,7 @@ def check_SV(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="SVCHK001")
 
+    #SVCHK002 : Visit end date before visit start date
     if r.get("SVCHK002"):
         sub = sv.dropna(subset=["SVSTDTC","SVENDTC"]).copy()
         sub = sub[(sub["SVSTDTC"].astype(str).str.strip() != "") &
@@ -40,6 +42,7 @@ def check_SV(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="SVCHK002")
 
+    #SVCHK003 : Visit dates not in chronological order within subject
     if r.get("SVCHK003"):
         sub = sv[sv["SVSTDTC"].notna() & (sv["SVSTDTC"].astype(str).str.strip() != "")].copy()
         sub["sv_dt"]  = pd.to_datetime(sub["SVSTDTC"], errors="coerce")

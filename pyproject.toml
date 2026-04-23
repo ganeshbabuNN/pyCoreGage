@@ -73,3 +73,8 @@ omit   = ["tests/*", "examples/*"]
 
 [tool.coverage.report]
 show_missing = true
+
+[tool.uv.workspace]
+members = [
+    "examples/STUDY01_TRAIL01",
+]

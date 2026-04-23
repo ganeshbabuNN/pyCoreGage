@@ -13,6 +13,9 @@ def check_FA(state, cfg):
         return state
     r = state.active_rules
 
+    #FACHK001 : Missing finding result (FAORRES)
+    #FACHK002 : Missing finding date (FADTC)
+    #FACHK003 : Missing evaluator flag (FAEVAL)
     for chk_id, col, label in [
         ("FACHK001", "FAORRES", "Finding result (FAORRES)"),
         ("FACHK002", "FADTC",   "Finding date (FADTC)"),

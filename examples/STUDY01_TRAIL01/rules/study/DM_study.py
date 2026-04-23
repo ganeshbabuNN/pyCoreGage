@@ -14,12 +14,14 @@ def check_DM_study(state, cfg):
         return state
     r = state.active_rules
 
+    #DMPRJ001 : Missing country (COUNTRY)
     if r.get("DMPRJ001"):
         res = dm[dm["COUNTRY"].isna() | (dm["COUNTRY"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]; res["vis_id"] = float("nan")
         res["description"] = "Country (COUNTRY) is missing in the demographics record"
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DMPRJ001")
 
+    #DMPRJ002 : Reference end date before reference start date
     if r.get("DMPRJ002"):
         sub = dm[
             dm["RFSTDTC"].notna() & (dm["RFSTDTC"].astype(str).str.strip() != "") &
@@ -35,6 +37,7 @@ def check_DM_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DMPRJ002")
 
+    #DMPRJ003 : Missing birth date (BRTHDTC)
     if r.get("DMPRJ003"):
         if "BRTHDTC" not in dm.columns:
             print("  NOTE: BRTHDTC column not found - skipping DMPRJ003.")

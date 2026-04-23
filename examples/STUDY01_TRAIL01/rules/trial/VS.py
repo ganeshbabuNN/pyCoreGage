@@ -14,6 +14,7 @@ def check_VS(state, cfg):
         return state
     r = state.active_rules
 
+    #VSCHK001 : Systolic BP not greater than diastolic BP
     if r.get("VSCHK001"):
         sysbp = vs[
             (vs["VSTESTCD"] == "SYSBP") &
@@ -38,6 +39,7 @@ def check_VS(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="VSCHK001")
 
+    #VSCHK002 : Missing vital sign result (VSORRES)
     if r.get("VSCHK002"):
         res = vs[vs["VSORRES"].isna() | (vs["VSORRES"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -48,6 +50,7 @@ def check_VS(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="VSCHK002")
 
+    #VSCHK003 : Vital sign value outside normal reference range
     if r.get("VSCHK003"):
         sub = vs[
             vs["VSORRES"].notna()  & (vs["VSORRES"].astype(str).str.strip()  != "") &

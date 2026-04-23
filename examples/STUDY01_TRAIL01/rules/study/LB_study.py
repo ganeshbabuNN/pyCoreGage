@@ -16,6 +16,7 @@ def check_LB_study(state, cfg):
         return state
     r = state.active_rules
 
+    #LBPRJ001 : Missing lab collection date (LBDTC)
     if r.get("LBPRJ001"):
         res = lb[lb["LBDTC"].isna() | (lb["LBDTC"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -26,6 +27,7 @@ def check_LB_study(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="LBPRJ001")
 
+    #LBPRJ002 : Inconsistent analysis method across sites for same test
     if r.get("LBPRJ002"):
         if "LBMETHOD" not in lb.columns:
             print("  NOTE: LBMETHOD column not found - skipping LBPRJ002.")
@@ -54,6 +56,7 @@ def check_LB_study(state, cfg):
                 )
                 state = collect_findings(state, res[["subj_id","vis_id","description"]], id="LBPRJ002")
 
+    #LBPRJ003 : Specimen condition not in allowed list
     if r.get("LBPRJ003"):
         if "LBSPCCND" not in lb.columns:
             print("  NOTE: LBSPCCND column not found - skipping LBPRJ003.")

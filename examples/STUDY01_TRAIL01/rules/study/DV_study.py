@@ -13,6 +13,7 @@ def check_DV_study(state, cfg):
         return state
     r = state.active_rules
 
+    #DVPRJ001 : Missing reason for deviation (DVREASND)
     if r.get("DVPRJ001"):
         if "DVREASND" not in dv.columns:
             print("  NOTE: DVREASND column not found - skipping DVPRJ001.")
@@ -25,6 +26,7 @@ def check_DV_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DVPRJ001")
 
+    #DVPRJ002 : Missing dictionary coded term (DVDECOD)
     if r.get("DVPRJ002"):
         if "DVDECOD" not in dv.columns:
             print("  NOTE: DVDECOD column not found - skipping DVPRJ002.")
@@ -37,6 +39,7 @@ def check_DV_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DVPRJ002")
 
+    #DVPRJ003 : Missing site ID (SITEID)
     if r.get("DVPRJ003"):
         if "SITEID" not in dv.columns:
             print("  NOTE: SITEID column not found - skipping DVPRJ003.")

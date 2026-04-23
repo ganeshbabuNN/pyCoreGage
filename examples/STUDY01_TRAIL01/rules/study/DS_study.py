@@ -15,6 +15,7 @@ def check_DS_study(state, cfg):
         return state
     r = state.active_rules
 
+    #DSPRJ001 : Invalid epoch value (DSEPOCH)
     if r.get("DSPRJ001"):
         if "DSEPOCH" not in ds.columns:
             print("  NOTE: DSEPOCH column not found - skipping DSPRJ001.")
@@ -28,6 +29,7 @@ def check_DS_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DSPRJ001")
 
+    #DSPRJ002 : Duplicate primary disposition records per subject
     if r.get("DSPRJ002"):
         if "DSSCAT" not in ds.columns:
             print("  NOTE: DSSCAT column not found - skipping DSPRJ002.")
@@ -43,6 +45,7 @@ def check_DS_study(state, cfg):
                 )
                 state = collect_findings(state, res[["subj_id","vis_id","description"]], id="DSPRJ002")
 
+    #DSPRJ003 : Missing site ID (SITEID)
     if r.get("DSPRJ003"):
         if "SITEID" not in ds.columns:
             print("  NOTE: SITEID column not found - skipping DSPRJ003.")

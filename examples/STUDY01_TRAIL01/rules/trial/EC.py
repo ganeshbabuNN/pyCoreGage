@@ -18,6 +18,7 @@ def check_EC(state, cfg):
         return state
     r = state.active_rules
 
+    #ECCHK001 : EC end date before start date
     if r.get("ECCHK001"):
         sub = ec.dropna(subset=["ECSTDTC","ECENDTC"]).copy()
         sub = sub[(sub["ECSTDTC"].str.strip() != "") & (sub["ECENDTC"].str.strip() != "")]
@@ -33,6 +34,7 @@ def check_EC(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="ECCHK001")
 
+    #ECCHK002 : Missing dose amount (ECDOSE)
     if r.get("ECCHK002"):
         res = ec[ec["ECDOSE"].isna() | (ec["ECDOSE"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]
@@ -43,6 +45,7 @@ def check_EC(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="ECCHK002")
 
+    #ECCHK003 : Dose unit missing when dose is present
     if r.get("ECCHK003"):
         sub = ec[ec["ECDOSE"].notna() & (ec["ECDOSE"].astype(str).str.strip() != "")].copy()
         res = sub[sub["ECDOSU"].isna() | (sub["ECDOSU"].astype(str).str.strip() == "")].copy()
@@ -55,6 +58,7 @@ def check_EC(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="ECCHK003")
 
+    #ECCHK004 : Invalid dose form — not in allowed list
     if r.get("ECCHK004"):
         sub = ec[ec["ECDOSFRM"].notna() & (ec["ECDOSFRM"].astype(str).str.strip() != "")].copy()
         res = sub[~sub["ECDOSFRM"].str.upper().str.strip().isin(ALLOWED_FORMS)].copy()
@@ -67,6 +71,7 @@ def check_EC(state, cfg):
         )
         state = collect_findings(state, res[["subj_id","vis_id","description"]], id="ECCHK004")
 
+    #ECCHK005 : Missing administration status (ECSTAT)
     if r.get("ECCHK005"):
         res = ec[ec["ECSTAT"].isna() | (ec["ECSTAT"].astype(str).str.strip() == "")].copy()
         res["subj_id"] = res["USUBJID"]

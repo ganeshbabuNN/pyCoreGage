@@ -17,6 +17,7 @@ def check_SV_study(state, cfg):
         return state
     r = state.active_rules
 
+    #SVPRJ001 : Missing visit description (SVUPDES)
     if r.get("SVPRJ001"):
         if "SVUPDES" not in sv.columns:
             print("  NOTE: SVUPDES column not found - skipping SVPRJ001.")
@@ -30,6 +31,7 @@ def check_SV_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="SVPRJ001")
 
+    #SVPRJ002 : Duplicate visit records for same subject and visit number
     if r.get("SVPRJ002"):
         counts = sv.groupby(["USUBJID","VISITNUM"]).size().reset_index(name="_n")
         dups   = counts[counts["_n"] > 1][["USUBJID","VISITNUM"]]
@@ -45,6 +47,7 @@ def check_SV_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="SVPRJ002")
 
+    #SVPRJ003 : Visit date outside expected study window (after 2026-01-01)
     if r.get("SVPRJ003"):
         sub = sv[sv["SVSTDTC"].notna() & (sv["SVSTDTC"].astype(str).str.strip() != "")].copy()
         sub["sv_dt"] = pd.to_datetime(sub["SVSTDTC"], errors="coerce").dt.date

@@ -14,6 +14,7 @@ def check_PC_study(state, cfg):
         return state
     r = state.active_rules
 
+    #PCPRJ001 : Missing specimen type (PCSPEC)
     if r.get("PCPRJ001"):
         if "PCSPEC" not in pc.columns:
             print("  NOTE: PCSPEC column not found - skipping PCPRJ001.")
@@ -27,6 +28,7 @@ def check_PC_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PCPRJ001")
 
+    #PCPRJ002 : Missing concentration units (PCSTRESU)
     if r.get("PCPRJ002"):
         if "PCSTRESU" not in pc.columns:
             print("  NOTE: PCSTRESU column not found - skipping PCPRJ002.")
@@ -41,6 +43,7 @@ def check_PC_study(state, cfg):
             )
             state = collect_findings(state, res[["subj_id","vis_id","description"]], id="PCPRJ002")
 
+    #PCPRJ003 : Duplicate records for same subject, visit, and test
     if r.get("PCPRJ003"):
         counts = pc.groupby(["USUBJID","VISITNUM","PCTESTCD"]).size().reset_index(name="_n")
         dups   = counts[counts["_n"] > 1][["USUBJID","VISITNUM","PCTESTCD"]]
