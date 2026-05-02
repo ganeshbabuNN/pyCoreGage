@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: pyCoreGage
-Version: 0.1.0
+Version: 1.0.0
 Summary: Data Quality Check Framework for Clinical and Analytical Data
 Author-email: Ganesh Babu G <ganeshbabu346@gmail.com>
 License: GPL-3.0-or-later
@@ -487,12 +487,6 @@ cfg = CoreGageConfig(
 | `[Was closed but re-appeared]` | Previously closed finding is back in data |
 
 ---
-
-## 11. Publishing to PyPI
-
-See [PUBLISH.md](PUBLISH.md) for the step-by-step guide to publish pyCoreGage
-to PyPI, including TestPyPI dry-run, versioning, and release checklist.
-
 ---
 
 ## License

@@ -1,7 +1,6 @@
 CHANGELOG.md
 LICENSE.md
 MANIFEST.in
-PUBLISH.md
 README.md
 pyproject.toml
 examples/STUDY01_TRAIL01/main.py
