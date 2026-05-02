@@ -452,12 +452,6 @@ cfg = CoreGageConfig(
 | `[Was closed but re-appeared]` | Previously closed finding is back in data |
 
 ---
-
-## 11. Publishing to PyPI
-
-See [PUBLISH.md](PUBLISH.md) for the step-by-step guide to publish pyCoreGage
-to PyPI, including TestPyPI dry-run, versioning, and release checklist.
-
 ---
 
 ## License
